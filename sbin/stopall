@@ -1,0 +1,6 @@
+#!/bin/bash
+
+kill `cat $ZIXAPP_HOME/log/zeta.pid`;
+rm -fr $ZIXAPP_HOME/log/zeta.pid;
+
+

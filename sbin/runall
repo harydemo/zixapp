@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd $ZIXAPP_HOME/log;
+
+zeta -f $ZIXAPP_HOME/conf/zeta.conf;
+
+
