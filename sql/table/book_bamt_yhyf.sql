@@ -11,8 +11,8 @@ create table book_bamt_yhyf (
     b_crz_date  char(8),
     
     -- jz data
-    j_amt       bigint,
-    d_amt       bigint,
+    j       bigint,
+    d       bigint,
 
     --
     ys_id       bigint not null,

@@ -9,41 +9,21 @@ use ZAPP::PROC;
 
 sub {
 
-    # 获取配置
+    # 全局配置
     my $cfg = zkernel->zapp_config();
-    warn "zapp_config:\n" . Data::Dump->dump($cfg) if $ENV{ZAPP_DEBUG};
 
     # 连接数据库
-    my $dbh = DBI->connect(
-        @{$cfg->{db}}{qw/dsn user pass/},
-        {
-            RaiseError       => 1,
-            PrintError       => 0,
-            AutoCommit       => 0,
-            FetchHashKeyName => 'NAME_lc',
-            ChopBlanks       => 1,
-        }
-    );
-    unless($dbh) {
-        zlogger->error("can not connet db[@{$cfg->{db}}{qw/dsn user pass/}], quit");
-        exit 0;
-    }
-
-    # 设置默认schema
-    $dbh->do("set current schema $cfg->{db}->{schema}") or confess "can not set current schema $cfg->{db}->{schema}";
+    my $dbh = zkernel->zapp_dbh();
 
     # 构建proc对象
-    my $proc = ZAPP::PROC->new(dbh => $dbh, book => $cfg->{book}, proc => $cfg->{proc} ) or confess "can not ZAPP::PROC->new";
+    my $proc = ZAPP::PROC->new(
+        dbh  => $dbh, 
+        book => $cfg->{book}, 
+        yspz => $cfg->{yspz}, 
+        proc => $cfg->{proc} 
+    ) or confess "can not ZAPP::PROC->new";
 
     warn "ZAPP:PROC:\n"  . Data::Dump->dump($proc) if $ENV{ZAPP_DEBUG};
-
-#
-    # my $id = $proc->bfee_yhyf(1, undef, 3, 4, 5, 6, 7, 8, 9);
-    # $proc->commit();
-    # warn "bfee_yhyf got id[$id]";
-    #while(1) { sleep 100; }
-#};
-
 
     # 构建stomp客户端
     my $stomp = Net::Stomp->new( 

@@ -17,9 +17,8 @@ sub new {
 
 sub handle {
     my ($self, $req)  = @_;
-    warn "-----------------------------------\n";
+    warn "-----------------got request------------------\n";
     Data::Dump->dump($req);
-    Data::Dump->dump($self->{service});
     return $self->{service}->{$req->{svc}}->($self, $req);
 }
 

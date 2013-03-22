@@ -1,0 +1,6 @@
+#!/bin/bash
+
+db2 connect to $DB_NAME user $DB_USER using $DB_PASS;
+
+
+

@@ -5,12 +5,18 @@ use warnings;
 #
 #  @para = (
 #     dbh  => $dbh,
-#     book => [ 'bamt_yhyf', 'bfee_yhyf'],
+#     book => [ 'bamt_yhyf', 'bfee_yhyf' ],
+#     yspz => [ 'yspz_0001', 'yspz_0002' ],
 #     proc => {
 #         0001  => sub { ... },
 #     }
 #  );
-#
+#-----------------------------------------------------------------
+# 动态添加的功能:
+# $proc->jzpz_id()                     : 返回id
+# $proc->jzpz($f1, $f2, $f3, ....)     : 插入记账凭证
+# $proc->xxx_book($f1, $f2,...)        : 插入账簿记录， 返回j_id or d_id
+# $proc->yspz_xxxx($ys_id, $pstat)     : 更新原始凭证状态
 #
 sub new {
     my $class = shift;
@@ -19,7 +25,6 @@ sub new {
         return;
     }
 
-    my %book;
     for my $name (@{delete $self->{book}}) {
 
         my $seq = 'seq_' . $name;
@@ -29,15 +34,12 @@ sub new {
         warn "sql_nhash[$sql_nhash]" if $ENV{ZAPP_DEBUG};
         my $sth_nhash = $self->{dbh}->prepare("select * from book_$name") or return;
         my %nhash = %{$sth_nhash->{NAME_hash}};
-        warn "nhash:\n";
-        Data::Dump->dump(\%nhash);
+        warn "nhash:\n" .  Data::Dump->dump(\%nhash) if $ENV{ZAPP_DEBUG};
         delete $nhash{TS_C};
         $sth_nhash->finish();
 
         # @key && @val
         %nhash = reverse %nhash;
-        warn "nhash rev:\n";
-        Data::Dump->dump(\%nhash);
         my @idx = sort keys %nhash;
         my @val = @nhash{@idx};
 
@@ -52,7 +54,7 @@ sub new {
         my $sql_seq = "values nextval for $seq";
         my $sth_seq = $self->{dbh}->prepare("values nextval for $seq") or return;
         warn "sql_seq[$sql_seq]" if $ENV{ZAPP_DEBUG};
-        $book{$name} = [ $sth_seq, $sth_ins ];
+        $self->{book}->{$name} = [ $sth_seq, $sth_ins ];
 
        # 批量产生函数      
        no strict 'refs';
@@ -73,7 +75,22 @@ sub new {
            return $id;
        };
     }
-    $self->{book}  = \%book;
+
+    for my $name (@{delete $self->{yspz}}) {
+
+        # 准备yspz更新的sth
+        my $sql = qq/update $name set pstat = ? where id = ?/;
+        $self->{yspz}->{$name} = $self->{dbh}->prepare($sql) or return;
+
+        no strict 'refs';
+        *{ __PACKAGE__ . "::$name" } = sub {
+            my ($self, $id, $pstat) = @_;
+            $self->{yspz}->{$name}->execute($pstat, $id);
+            return $self;
+        };
+    }
+
+
     $self->{jzpz_id} = $self->{dbh}->prepare(qq/values nextval for seq_jzpz/) or return;
     my $sql_jzpz = qq/insert into jzpz(id, j_id, j_book, d_id, d_book, ys_type, ys_id, ts_c) values(?,?,?,?,?,?,?,current timestamp)/;
     $self->{jzpz}  = $self->{dbh}->prepare($sql_jzpz) or return;

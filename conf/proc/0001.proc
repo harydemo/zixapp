@@ -4,6 +4,10 @@ use warnings;
 
 #
 #  0001号原始凭证处理
+#  $proc->'book_name'   : 插入账簿记录
+#  $proc->jzpz_id       : 产生记账凭证id
+#  $proc->jzpz          : 插入记账凭证
+#
 #
 sub {
     my ($proc, $src) = @_; 
@@ -25,7 +29,8 @@ sub {
     $d_id = $proc->bfee_yhyf(1,2,3,4,5,6,7,8,$jzpz_id);
     # $proc->jzpz();
 
-    # 插入原始凭证
+    # 更新原始凭证状态
+    $proc->yspz_0001(1); 
     
     $proc->commit();
 };
