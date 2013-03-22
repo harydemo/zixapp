@@ -74,7 +74,7 @@ sub new {
        };
     }
     $self->{book}  = \%book;
-    $self->{jz_id} = $self->{dbh}->prepare(qq/values nextval for seq_jzpz/) or return;
+    $self->{jzpz_id} = $self->{dbh}->prepare(qq/values nextval for seq_jzpz/) or return;
     my $sql_jzpz = qq/insert into jzpz(id, j_id, j_book, d_id, d_book, ys_type, ys_id, ts_c) values(?,?,?,?,?,?,?,current timestamp)/;
     $self->{jzpz}  = $self->{dbh}->prepare($sql_jzpz) or return;
 
@@ -86,8 +86,8 @@ sub new {
 #
 sub jzpz_id {
     my $self = shift; 
-    $self->{jz_id}->execute();
-    my ($id) = $self->{jzpz}->fetchrow_array();
+    $self->{jzpz_id}->execute();
+    my ($id) = $self->{jzpz_id}->fetchrow_array();
     return $id;
 }
 
