@@ -49,7 +49,7 @@ sub {
             dbh        => $dbh, 
             stomp      => $stomp, 
             serializer => $cfg->{serializer}, 
-            service    => $cfg->{service}
+            service    => $cfg->{service}->{svc},
         },
     ) or confess "can not ZAPP::Service->new";
 
