@@ -1,3 +1,4 @@
+--
 drop table book_bfee_yhyf;
 create table book_bfee_yhyf (
 
@@ -5,26 +6,64 @@ create table book_bfee_yhyf (
     id          bigint primary key not null,
     
     -- dimension
-    b_acct      char(32)     ,
-    b_name      varchar(128) ,
-    zjbd_type   char(2)      ,
-    b_crz_date  char(8)      ,
+    yp_acct     integer   not null,
+    zjbd_type   integer   not null,
+    zjbd_date      date      not null,
+    -- dimension (tp)
+    period      date         not null,
     
     -- jz data
-    j_amt       bigint default 0,
-    d_amt       bigint default 0,
+    j       bigint default 0 not null,
+    d       bigint default 0 not null,
 
-    ys_type    int,
-    ys_id      bigint,
-    jzpz_id    bigint,
+    -- jzpz 
+    ys_type     char(4)      not null,
+    ys_id       bigint       not null,
+    jzpz_id     bigint       not null,
+
     
     -- misc
-    ts_c    timestamp default current timestamp
+    --rec_c_ts    timestamp default current timestamp
+    ts_c        timestamp default current timestamp
 
-);
+) in tbs_dat index in tbs_idx;
 
 
 drop sequence seq_bfee_yhyf;
 create sequence seq_bfee_yhyf as bigint start with 1 increment by 1 minvalue 1 no maxvalue no cycle no cache order;
 
 
+--
+-- 应付银行 - 已核应付银行手续费
+--
+
+
+comment on table  book_bfee_yhyf is '应付银行 - 已核应付银行手续费';
+comment on column book_bfee_yhyf.id             is '主键';
+comment on column book_bfee_yhyf.yp_acct     is '银行账户号及相应开户行';
+comment on column book_bfee_yhyf.zjbd_type   is '资金变动类型';
+comment on column book_bfee_yhyf.zjbd_date      is '银行出入账日期';
+comment on column book_bfee_yhyf.period      is '会计期间';
+comment on column book_bfee_yhyf.j          is '借方发生额';
+
+
+
+
+-- MQT
+create table sum_bfee_yhyf as (
+    select yp_acct    as yp_acct,
+	   zjbd_type  as zjbd_type,
+	   zjbd_date  as zjbd_date,
+	   period     as period,
+	   sum(j)     as j,
+	   sum(d)     as d,
+	   count(*)   as cnt
+    from book_bfee_yhyf
+    group by yp_acct, zjbd_type, zjbd_date, period
+)
+data initially deferred refresh immediate
+in tbs_dat;
+
+
+-- integrity unchecked
+set integrity for sum_bfee_yhyf materialized query immediate unchecked;
