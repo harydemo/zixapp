@@ -4,6 +4,7 @@ use warnings;
 
 sub new {
     my ($class, $para) = @_;
+    bless {}, $class;
 }
 
 my $cnt = 0;

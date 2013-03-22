@@ -12,7 +12,7 @@ sub {
    my ($svc, $req) = @_;
 
    return {
-      hello => 'world',
+      hello => 'beijing',
    };
 };
 
